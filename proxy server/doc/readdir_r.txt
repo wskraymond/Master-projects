@@ -1,0 +1,48 @@
+#include <dirent.h>
+
+struct dirent *readdir(DIR *dirp);
+
+int readdir_r(DIR *dirp, struct dirent *entry, struct dirent **result);
+
+The readdir() function returns a pointer to a dirent structure representing the next directory entry in the directory stream pointed to by dirp. It returns NULL on reaching the end of the directory stream or if an error occurred.
+
+****On Linux****, the dirent structure is defined as follows:
+
+struct dirent {
+    ino_t          d_ino;       /* inode number */
+    off_t          d_off;       /* offset to the next dirent */
+    unsigned short d_reclen;    /* length of this record */
+    unsigned char  d_type;      /* type of file; not supported
+                                   by all file system types */
+    char           d_name[256]; /* filename */
+};
+
+The readdir_r() function is a reentrant version of readdir(). It reads the next directory entry from the directory stream dirp, 
+and returns it in the caller-allocated buffer pointed to by entry. (See NOTES for information on allocating this buffer.) A pointer to the returned item is placed in *result; 
+if the end of the directory stream was encountered, 
+then NULL is instead returned in *result.
+
+
+The readdir_r() function returns 0 on success. On error, 
+it returns a positive error number (listed under ERRORS). 
+If the end of the directory stream is reached, readdir_r() returns 0, and returns NULL in *result.
+_________________________________________________________________________________
+#include <sys/types.h>
+#include <dirent.h>
+
+DIR *opendir(const char *name)
+
+The opendir() function opens a directory stream corresponding to the directory name, and returns a pointer to the directory stream. The stream is positioned at the first entry in the directory.
+
+_________________________________________________________________________________
+#include <sys/types.h>
+#include <dirent.h>
+
+int closedir(DIR *dirp);
+
+Description
+
+The closedir() function closes the directory stream associated with dirp. A successful call to closedir() also closes the underlying file descriptor associated with dirp. The directory stream descriptor dirp is not available after this call.
+Return Value
+
+The closedir() function returns 0 on success. On error, -1 is returned, and errno is set appropriately.

@@ -1,0 +1,18 @@
+int setvbuf(FILE *stream, char *buf, int mode, size_t size);
+
+=====> used to change the buffered mode and change the current buffer(given by kernel) to the user assigend one ( buf ).
+The setvbuf() function may be used on any open stream to change its buffer. The mode argument must be one of the following three macros:
+
+_IONBF
+unbuffered
+
+_IOLBF
+
+line buffered
+
+_IOFBF
+
+fully buffered
+
+-Except for unbuffered files, the buf argument should point to a buffer at least size bytes long; ****this buffer*** will be used instead of ***the current buffer****. 
+-If the argument buf is NULL, only the mode is affected; a new buffer will be allocated on the next read or write operation. 

@@ -1,0 +1,10 @@
+server.c & client.c:
+    A simple illustration of how socket programming works, client
+    set server messages and server print the message out.
+
+NBserver.c & NBclient.c:
+    These 2 show why we need to transfer to network byte ordering for
+    transferring data.
+
+getHostByName.c getHostByAddr.c getPeerName.c getHostName.c:
+    Just for showing the usage of 4 functions.

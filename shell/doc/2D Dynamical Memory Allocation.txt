@@ -1,0 +1,189 @@
+(ㄧ)
+int **Array, *pData; 
+int m,n,i; 
+Array = (int**)malloc(m*sizeof(int *)); 
+pData = (int*)malloc(m*n*sizeof(int)); 
+for(i = 0; i < m; i++, pData += n)
+Array[i] = pData;
+只需做兩次malloc，free只要free Array和Array[0]就可以了
+(二)
+int i;
+int **Array;
+Array = (int **)malloc(m*sizeof(void *));
+for (i = 0; i < m; i++)
+Array = (int *)malloc(n*sizeof(int *));
+這樣子的配置方式要做很多次的malloc,，並容易造成記憶體碎片化(memory fragment)
+(三)
+int i;
+int **Array, *pData;
+Array = (int **)malloc(m*sizeof(int *)+m*n*sizeof(int));
+for (i = 0, pData = (int *)(Array+m); i < m; i++, pData += n)
+Array[i]=pData;
+這樣是最簡便的寫法 只要mallocㄧ次完成，free只要free Array即可
+-----------------------------------------------------------------------------
+Dynamically Allocating Multidimensional Arrays
+This is best illustrated with an example:
+
+	#include <stdlib.h>
+	
+	int i;
+	int **array;
+	array = malloc(nrows * sizeof(int *));
+	if(array == NULL)
+		{
+		fprintf(stderr, "out of memory\n");
+		exit or return
+		}
+	for(i = 0; i < nrows; i++)
+		{
+		array[i] = malloc(ncolumns * sizeof(int));
+		if(array[i] == NULL)
+			{
+			fprintf(stderr, "out of memory\n");
+			exit or return
+			}
+		}
+Once we've done this, we can (just as for the one-dimensional case) use array-like syntax to access our simulated multidimensional array. If we write
+
+	array[i][j]
+
+Finally, when it comes time to free one of these dynamically allocated multidimensional ``arrays,'' we must remember to free each of the chunks of memory that we've allocated. (Just freeing the top-level pointer, array, wouldn't cut it; if we did, all the second-level pointers would be lost but not freed, and would waste memory.) Here's what the code might look like:
+
+	for(i = 0; i < nrows; i++)
+		free(array[i]);
+	free(array);
+-----------------------------------------------------------------------------
+陣列的空間分配方式
+
+無論是幾維的陣列,C語言都以分配一塊連續的記憶體空間來處理。
+
+int x[10];
+分配10*sizeof(int)個bytes
+
+int x[5][10];
+分配5*10*sizeof(int)個bytes
+
+int x[4][5][6];
+分配4*5*6*sizeof(int)個bytes
+
+void fun(int x[]) {
+}
+上面的x就沒有分配陣列的空間了,而是相當於int *x;這是因為C語言呼叫函數傳遞參數時,無法傳遞整個陣列(陣列可能大得不得了),而是傳遞陣列的開頭地址,也就是指標。因此在參數宣告時,指標和沒有宣告大小的陣列是可以混用的。
+
+既然無論是幾維的陣列,C語言都以分配一塊連續的記憶體空間來處理,那麼像是
+
+int x[2][3];
+x[0][2] = 0;
+中的x[0][2]被翻譯到哪一塊記憶體去了? C語言是使用row major的方式來處理多維到一維的對應。簡單的說,就是右邊的索引先變化:
+
+  OOO  OOO
+這六個整數的順序為x[0][0],x[0][1],x[0][2],x[1][0],x[1][1],x[1][2]。
+
+array和pointer的對應關係如下:
+
+int x[p][q];
+int y[p][q][r];
+int z[p];
+int *po;
+po = x;
+x[i][j] = 0;
+*(po + i*q + j) = 0; // same with x[i][j];
+po = y;
+y[i][j][k] = 0;
+*(po + i*q*r + j*r + k) = 0; // same with y[i][j][k]
+po = z;
+z[i] = 0;
+*(po + i) = 0; // same with z[i]
+------------------------------------------------------------------------------------------------------------------------------
+strcpy()
+     The strcpy() function copies string s2 to s1, including  the
+     terminating  null character, stopping after the null charac-
+     ter has been copied. The strncpy() function copies exactly n
+     bytes,  truncating  s2  or  adding  null characters to s1 if
+     necessary. The result will not  be  null-terminated  if  the
+     length of s2 is n or more.  Each function returns s1.
+
+    char *strcpy(char *s1, const char *s2);
+    char *strncpy(char *s1, const char *s2, size_t n);
+
+memccpy() 
+     The memccpy() function copies bytes from memory area s2 into
+     s1,  stopping  after the first occurrence of c (converted to
+     an unsigned char) has been copied, or  after  n  bytes  have
+     been  copied, whichever comes first. It returns a pointer to
+     the byte after the copy of c in s1, or a null pointer  if  c
+     was not found in the first n bytes of s2.
+
+     void *memcpy(void *s1, const void *s2, size_t n);
+
+
+
+
+		#WarmUpExercise1
+  3 Q1) a)A dynamic variable for the result of addition should be declared in
+  4       the function and to be returned instead of the static variable c.
+  5     b)Addition function need not return a pointer.when there are variables,
+  6       which should be dynamic,to be assigned into the main function, then
+  7       in the function, a pointer to variable should be returned for that
+  8       purpose.However. there is only one value needed to be return in the
+  9       addition function, that is the result.Hence,pointers are no need.
+ 10
+ 11 Q2) The problem for this cause is that in the function new_array, there is
+ 12     a '=' sign in the condition checking of both of the for-loops.So,out of
+ 13     bound array exits and there could be segmentation fault while running
+ 14     the program.
+ 15 Q3) a) After uncommenting those lines of codes,there is segmentation fault
+ 16     b) The code of the line 18 should be changed into the line that
+ 17         int array[ROWS][COLS];
+ 18     c) The code of the line 18 should be changed into the lines that
+          int k;
+         int **array;
+         array = malloc(ROWS * sizeof(int *));
+          for(k=0;k<ROWS;k++)
+           array[k] = malloc(COLS * sizeof(int));
+ 24
+ 25     d) The following lines should be added between the line 18 and 19:
+          int k;
+          int **pos_array
+         Array = (int**)malloc(ROWS*sizeof(int *));
+          for(k = 0; k < ROWS; k++, array +=COLS )
+          pos_array[k] = array;
+ 31 Q4) a)array2 = [ 0, 0, 0, 0, 0, }
+ 32       array3 = [ 1, 2, 3, 4, 5, }
+ 33     b)
+
+
+
+
+
+
+
+
+     int* array = malloc(sizeof(int)*ROWS*COLS);
+      int k;
+                   int **pos_array = (int**)malloc(ROWS*sizeof(int *));
+                            for(k = 0; k < ROWS; k++, array +=COLS )
+                                         pos_array[k] = array;
+      process_array(pos_array);
+      printf(" func works out");
+      for(i=0; i<ROWS; i++) {
+          for(j=0;j<COLS; j++)
+              printf("%d ",pos_array[i][j]);
+          printf("\n");
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

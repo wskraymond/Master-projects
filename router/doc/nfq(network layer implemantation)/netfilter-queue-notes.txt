@@ -1,0 +1,611 @@
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+libnetfilter_queue man page
+Brad Fisher brad at info-link.net
+Wed Feb 8 18:12:35 CET 2006
+
+    * Previous message: libnetfilter_queue man page
+    * Next message: libnetfilter_queue man page
+    * Messages sorted by: [ date ] [ thread ] [ subject ] [ author ]
+
+Attached you should find my attempt at some documentation for 
+libnetfilter_queue...  Mostly just notes I've been accumulating as I 
+write an application using the queuing mechanism.  It's definitely not 
+good enough for a man page, and most of it is probably incorrect 
+garbage, so don't trust it too far.  If it helps someone, free free to 
+use it.
+
+One small thing I should mention - possibly a bug:  I tried playing 
+around with nfq_get_packet_hw() yesterday and the hw_addrlen returned 
+seemed to be much too large...  For an ethernet packet I'd expect it to 
+be 6 (ethernet MAC address is 6 octets), but it was something like 1520 
+or so.  Needless to say, much larger than expected.  Perhaps I'm 
+interpreting it wrong.  I haven't had a chance to look too deeply into 
+it yet.
+
+-Brad
+
+Harald Welte wrote:
+> On Mon, Feb 06, 2006 at 03:19:09PM +0100, Kevin Spiteri wrote:
+>   
+>> Hi Harald
+>>
+>> I read on the netfilter page that libnetfilter_queue deprecates
+>> libipq.  However, I only managed to find man pages for
+>> libipq. Could you please point me to a man page (or any
+>> documentation) for using libnetfilter_queue?
+>>     
+>
+> there is no manpage, but we're always open for contributions.
+
+----------
+nfq_open()
+----------
+
+Prototype:
+	struct nfq_handle *nfq_open(void)
+
+Parameters:
+	None.
+
+Returns:
+	Pointer to a new queue handle or NULL on failure.
+
+Description:
+	Obtains a netfilter queue connection handle.  When you are
+	finished with the handle returned by this function, you should
+	destroy it by calling nfq_close().  A new netlink connection
+	is obtained internally and associated with the queue
+	connection handle returned.
+
+---------------
+nfq_open_nfnl()
+---------------
+
+Prototype:
+	struct nfq_handle *nfq_open_nfnl(struct nfnl_handle *nfnlh)
+
+Parameters:
+
+	nfnlh	Netfilter netlink connection handle obtained by
+          calling nfnl_open()
+
+Returns:
+	Pointer to a new queue handle or NULL on failure.
+
+Description:
+	Obtains a netfilter queue connection handle using an existing
+	netlink connection.  This function is used internally to
+	implement nfq_open(), and should typically not be called
+	directly.
+
+-----------
+nfq_close()
+-----------
+
+Prototype:
+	int nfq_close(struct nfq_handle *h)	
+
+Parameters:
+	h	Netfilter queue connection handle obtained via
+          call to nfq_open()
+
+Returns:
+	0 on success, non-zero on failure (see nfnl_close() return
+        value)
+
+Description:
+	Close connection associated with the queue connection handle
+	and free associated resources.
+
+-----------
+nfq_nfnlh()
+-----------
+
+Prototype:
+	struct nfnl_handle *nfq_nfnlh(struct nfq_handle *h)
+
+Parameters:
+	h	Netfilter queue connection handle obtained via call to
+          nfq_open()
+
+Returns:
+	The netlink handle assocated with the given queue connection
+	handle.  If passed an invalid handle, this function will more
+	than likely cause a segfault as it performs no checks on the
+	provided handle.
+
+Description:
+	Returns the netlink handle associated with the given queue
+	connection handle.  Possibly useful if you wish to perform
+	other netlink communication directly after opening a queue
+	without opening a new netlink connection to do so.
+
+--------
+nfq_fd()
+--------
+
+Prototype:
+	int nfq_fd(struct nfq_handle *h)
+
+Parameters:
+	h	Netfilter queue connection handle obtained via call to
+          nfq_open()
+
+Returns:
+	A file descriptor that can be used for communication over the
+	netlink connection associated with the given queue connection
+	handle.  On failure, returns ??? -1 ???. (See nfnl_fd() return
+	value)
+
+Description:
+	Returns a file descriptor for the netlink connection
+	associated with the given queue connection handle.  The file
+	descriptor can then be used for receiving the queued packets
+	for processing.
+
+	Example:
+
+	  fd = nfq_fd(h);
+
+	  while ((rv = recv(fd, buf, sizeof(buf), 0)) && rv >= 0) {
+		printf("pkt received\n");
+		nfq_handle_packet(h, buf, rv);
+	  }
+
+-------------
+nfq_bind_pf()
+-------------
+
+Prototype:
+	int nfq_bind_pf(struct nfq_handle *h, u_int16_t pf)
+
+Parameters:
+
+	h	Netfilter queue connection handle obtained via call to
+          nfq_open()
+	pf	Protocol family to bind handle to
+
+Returns:
+	??? (See nfnl_talk() return value)
+
+Description:
+	Binds the given queue connection handle to process packets
+	belonging to the given protocol family (ie. PF_INET, PF_INET6,
+	etc).
+
+How many applications can bind to a given PF?
+Is it per-queue, or per PF only?
+
+??? Investigate kernel code to verify NFQNL_CFG_CMD_PF_BIND ???
+
+---------------
+nfq_unbind_pf()
+---------------
+
+Prototype:
+	int nfq_unbind_pf(struct nfq_handle *h, u_int16_t pf)
+
+Parameters:
+	h	Netfilter queue connection handle obtained via call to
+          nfq_open()
+	pf	Protocol family to unbind family from
+
+Returns:
+	??? (See nfnl_talk() return value)
+
+Description:
+	Unbinds the given queue connection handle from processing
+	packets belonging to the given protocol family.
+
+??? Investigate kernel code NFQNL_CFG_CMD_PF_UNBIND ???
+
+------------------
+nfq_create_queue()
+------------------
+
+Prototype:
+
+	struct nfq_q_handle *nfq_create_queue(struct nfq_handle *h,
+          u_int16_t num, nfq_callback *cb, void *data)
+
+Parameters:
+	h	Netfilter queue connection handle obtained via call to
+          nfq_open()
+	num	The number of the queue to bind to
+	cb	Callback function to call for each queued packet
+	data	Custom data to pass to the callback function
+
+Returns:
+	A new queue handle. (Actually a pointer to a linked list entry
+	maintained by the libnetfilter_queue library) Returns NULL on
+	failure.
+
+Description:
+	Creates a new queue handle, and returns it.  The new queue is
+	identified by <num>, and the callback specified by <cb> will
+	be called for each enqueued packet.  The <data> argument will
+	be passed unchanged to the callback.  If a queue entry with id
+	<num> already exists, this function will return failure and
+	the existing entry is unchanged.
+
+The nfq_callback type is defined in
+"libnetfilter_queue/libnetfilter_queue.h" as:
+
+  typedef int nfq_callback(struct nfq_q_handle *qh,
+    struct nfgenmsg *nfmsg, struct nfq_data *nfad, void *data);
+
+  Parameters:
+
+	qh	The queue handle returned by nfq_create_queue
+	nfmsg	???
+	nfq_data Netlink packet data handle (required as parameter of
+	  many of the informational functions)
+	data	??? The value passed to the data parameter of
+	  nfq_create_queue
+
+  Returns:
+	The callback should return ???
+
+	/* General form of address family dependent message.
+	 * Defined in "libnfnetlink/linux_libnfnetlink.h"
+	 */
+	struct nfgenmsg {
+		u_int8_t  nfgen_family;		/* AF_xxx */
+		u_int8_t  version;		/* nfnetlink version */
+		u_int16_t res_id;		/* resource id */
+	} __attribute__ ((packed));
+
+
+??? How many queues can exist?
+	- Could be unlimited.  Library implements as linked list.
+
+??? Can multiple apps bind to the same queue?
+	- looks like it's per app on lib side
+	- ...need to check out kernel side implementation...
+
+??? Can separate queues be processed separately by separate apps?
+
+??? Investigate kernel code NFQNL_CFG_CMD_BIND ???
+
+-------------------
+nfq_destroy_queue()
+-------------------
+
+Prototype:
+	int nfq_destroy_queue(struct nfq_q_handle *qh)
+
+Parameters:
+	qh	Netfilter queue handle obtained by call to
+          nfq_create_queue().
+
+Returns:
+	0 on success, non-zero on failure.  (See NFQNL_CFG_CMD_UNBIND
+	return value)
+
+Description:
+	Removes the binding for the specified queue handle.  (The
+	queue handles are maintained in the libnetfilter_queue library
+	as a linked list.  The <qh> is actually just a pointer to an
+	entry in that list.  When unbinding, a NFQNL_CFG_CMD_UNBIND
+	message is sent to netlink, and if successful, the handle
+	entry is removed from the linked list)
+
+??? Investigate kernel code NFQNL_CFG_CMD_UNBIND ???
+
+-------------------
+nfq_handle_packet()
+-------------------
+
+Prototype:
+	int nfq_handle_packet(struct nfq_handle *h, char *buf, int len)
+
+Parameters:
+	h	Netfilter queue connection handle obtained via call to
+	  nfq_open()
+	buf	Buffer containing packet data to process
+	len	Length of packet data in buffer
+
+Returns:
+	Returns 0 on success, non-zero on failure. (See
+	nfnl_handle_packet() return value)
+
+Description:
+	Triggers an associated callback for the given packet received
+	from the queue.  Packets can be read from the queue using
+	nfq_fd() and recv().  See example code for nfq_fd().
+
+--------------
+nfq_set_mode()
+--------------
+
+Prototype:
+	int nfq_set_mode(struct nfq_q_handle *qh, u_int8_t mode,
+	  u_int32_t range)
+
+Parameters:
+	qh	Netfilter queue handle obtained by call to
+          nfq_create_queue().
+	mode	NFQNL_COPY_NONE		??? Do not copy any data
+		NFQNL_COPY_META		??? Copy only packet metadata
+		NFQNL_COPY_PACKET	??? Copy entire packet
+	range	??
+
+Returns:
+	0 on success, non-zero on failure. (see nfnl_talk() return
+	value)
+
+Description:
+	Sets the amount of data to be copied to userspace for each
+	packet queued to the given queue. ???
+
+-----------------
+nfq_set_verdict()
+-----------------
+
+Prototype:
+	int nfq_set_verdict(struct nfq_q_handle *qh, u_int32_t id,
+	  u_int32_t verdict, u_int32_t data_len, unsigned char *buf)
+
+Parameters:
+	qh	Netfilter queue handle obtained by call to
+	  nfq_create_queue().
+	id	ID assigned to packet by netfilter.  Can be obtained
+	  by:
+		int id;
+		struct nfqnl_msg_packet_hdr *ph =
+		  nfq_get_msg_packet_hdr(tb);
+		if (ph) id = ntohl(ph->packet_id);
+	verdict	Verdict to return to netfilter
+		NF_ACCEPT	- Accept the packet
+		NF_DROP		- Drop the packet
+		???		- anything else possible? (ie. continue?,
+				  jump? goto? log?)
+	data_len ??? Number of bytes of data pointed to by <buf>
+	buf	??? Pointer to data buffer...
+
+Returns:
+	0 on success, non-zero on failure.  (See nfnl_sendiov() return
+	value)
+
+Description:
+	Notifies netfilter of the userspace verdict for the given
+	packet.  Every queued packet _must_ have a verdict specified
+	by userspace, either by calling this function, or by calling
+	the nfq_set_verdict_mark() function.
+
+----------------------
+nfq_set_verdict_mark()
+----------------------
+
+Prototype:
+	int nfq_set_verdict_mark(struct nfq_q_handle *qh, u_int32_t id,
+	  u_int32_t verdict, u_int32_t mark, u_int32_t data_len,
+          unsigned char *buf)
+
+Parameters:
+	qh	Netfilter queue handle obtained by call to
+	  nfq_create_queue().
+	id	ID assigned to packet by netfilter.  Can be obtained by: 
+		ph = nfq_get_msg_packet_hdr(tb);
+		if (ph) id = ntohl(ph->packet_id);
+	verdict	Verdict to return to netfilter
+		NF_ACCEPT	- Accept the packet
+		NF_DROP		- Drop the packet
+		???		- anything else possible? (ie. continue?,
+				  jump? goto? log?)
+	mark	Netfilter mark value to mark packet with
+	data_len ??? Number of bytes of data pointed to by <buf>
+	buf	??? Pointer to data buffer...
+
+Returns:
+	0 on success, non-zero on failure.  (See nfnl_sendiov() return
+	value)
+
+Description:
+	Notifies netfilter of the userspace verdict for the given
+	packet, and also marks the packet with the given netfilter
+	mark value.  Every queued packet _must_ have a verdict
+	specified by userspace, either by calling this function, or by
+	calling the nfq_set_verdict() function.
+
+------------------------
+nfq_get_msg_packet_hdr()
+------------------------
+
+Prototype:
+	struct nfqnl_msg_packet_hdr *nfq_get_msg_packet_hdr
+          (struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	Returns the netlink packet header for the given packet data.
+
+Description:
+	Returns the netfilter queue netlink packet header for the
+	given nfq_data argument.  Typically, the nfq_data value is
+	passed as the 3rd parameter to the callback function set by a
+	call to nfq_create_queue().
+
+	The nfqnl_msg_packet_hdr structure is defined in
+	"libnetfilter_queue/libnetfilter_queue.h" as:
+
+	struct nfqnl_msg_packet_hdr {
+		u_int32_t  packet_id;/* unique ID of packet in queue */
+		u_int16_t  hw_protocol;/* hw protocol (network order) */
+		u_int8_t   hook;/* netfilter hook */
+	} __attribute__ ((packed));
+
+----------------
+nfq_get_nfmark()
+----------------
+
+Prototype:
+	uint32_t nfq_get_nfmark(struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The netfilter mark currently assigned to the packet.
+
+Description:
+	Returns the netfilter mark currently assigned to the given
+	queued packet.
+
+-------------------
+nfq_get_timestamp()
+-------------------
+
+Prototype:
+	int nfq_get_timestamp(struct nfq_data *nfad, struct timeval *tv)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+	tv		Structure to fill with timestamp info
+
+Returns:
+	0 on success, non-zero on failure.
+
+Description:
+	Retrieves the received timestamp when the given queued packet.
+
+---------------
+nfq_get_indev()
+---------------
+
+Prototype:
+	u_int32_t nfq_get_indev(struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The index of the device the queued packet was received via.
+	If the returned index is 0, the packet was locally generated
+	or the input interface is no longer known (ie. POSTROUTING?).
+
+Description:
+	Retrieves the interface that the queued packet was received
+	through.
+
+--------------------
+nfq_get_physindev()
+--------------------
+
+Prototype:
+	u_int32_t nfq_get_physindev(struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The index of the physical device the queued packet was
+	received via.  If the returned index is 0, the packet was
+	locally generated or the physical input interface is no longer
+	known (ie. POSTROUTING?).
+
+Description:
+	Retrieves the physical interface that the queued packet was
+	received through.
+
+----------------
+nfq_get_outdev()
+----------------
+
+Prototype:
+	u_int32_t nfq_get_outdev(struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The index of the device the queued packet will be sent out.
+	If the returned index is 0, the packet is destined for
+	localhost or the output interface is not yet known
+	(ie. PREROUTING?).
+
+Description:
+	Retrieves the interface that the queued packet will be routed
+	out.
+
+--------------------
+nfq_get_physoutdev()
+--------------------
+
+Prototype:
+	u_int32_t nfq_get_physoutdev(struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The index of the physical device the queued packet will be
+	sent out.  If the returned index is 0, the packet is destined
+	for localhost or the physical output interface is not yet
+	known (ie. PREROUTING?).
+
+Description:
+	Retrieves the physical interface that the queued packet will
+	be routed out.
+
+-------------------
+nfq_get_packet_hw()
+-------------------
+
+Prototype:
+	struct nfqnl_msg_packet_hw *nfq_get_packet_hw
+	  (struct nfq_data *nfad)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The source hardware address associated with the queued packet,
+	or NULL if unknown.
+
+Description:
+	Retrieves the hardware address associated with the given
+	queued packet.  For ethernet packets, the hardware address
+	returned (if any) will be the MAC address of the packet source
+	host.  The destination MAC address is not known until after
+	POSTROUTING and a successful ARP request, so cannot currently
+	be retrieved.
+
+	The nfqnl_msg_packet_hw structure is defined in
+	"libnetfilter_queue/libnetfilter_queue.h" as:
+
+		struct nfqnl_msg_packet_hw {
+			u_int16_t	hw_addrlen;
+			u_int16_t	_pad;
+			u_int8_t	hw_addr[8];
+		} __attribute__ ((packed));
+
+-----------------
+nfq_get_payload()
+-----------------
+
+Prototype:
+	int nfq_get_payload(struct nfq_data *nfad, char **data)
+
+Parameters:
+	nfad	Netlink packet data handle passed to callback function
+
+Returns:
+	The size of the data whose address is placed in <data> on
+	success, -1 on failure.
+
+Description:
+	Retrieve the payload for a queued packet.  The actual amount
+	and type of data retrieved by this function will depend on the
+	mode set with the nfq_set_mode() function:
+		NFQNL_COPY_NONE		No data will be returned
+		NFQNL_COPY_META     Only packet headers will be returned
+		NFQNL_COPY_PACKET	Entire packet will be returned
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+From:
+http://lists.netfilter.org/pipermail/netfilter-devel/2006-February/023286.html

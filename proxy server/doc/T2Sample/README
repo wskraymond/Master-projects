@@ -1,0 +1,5 @@
+HERE are 3 sample programs: sample1.c sample2.c and sample3.c
+
+sample1.c: basic pthread programming
+sample2.c: mutex
+sample3.c: using arguments to communicate
