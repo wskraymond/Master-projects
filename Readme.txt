@@ -32,6 +32,19 @@ Related to the following tech
 2.multi-threading , Synchronization
 3.Implementation of Http protocol manipulation for proxy server
 
+__________________________________________________________________________________________
+Dev Env Setup
+https://code.visualstudio.com/docs/remote/remote-overview
+https://code.visualstudio.com/docs/editor/command-line
+
+GCC stands for GNU Compiler Collection; 
+GDB is the GNU debugger.
+WSL is a Linux environment within Windows that runs directly on the machine hardware,
+ not in a virtual machine.
+
+Visual Studio Code has support for working directly in WSL with the WSL extension. 
+recommend this mode of WSL development, where all your source code files, 
+in addition to the compiler, are hosted on the Linux distro.
 
 __________________________________________________________________________________________
 WSL Installation and Setup
@@ -58,3 +71,4 @@ You can launch a new instance of VS Code connected to WSL by opening a WSL termi
 
 To get started with your first app using the WSL extension, check out the step-by-step WSL tutorial in docs:
 https://code.visualstudio.com/docs/remote/wsl-tutorial
+
