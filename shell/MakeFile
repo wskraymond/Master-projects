@@ -1,0 +1,4 @@
+linux:
+	gcc -Wall -o osShell osShell.c
+clean:
+	rm -f osShell
