@@ -31,3 +31,9 @@ Related to the following tech
 1.socket programming
 2.multi-threading , Synchronization
 3.Implementation of Http protocol manipulation for proxy server
+
+
+__________________________________________________________________________________________
+WSL Installation and Setup
+https://learn.microsoft.com/en-us/windows/wsl/install#prerequisites
+https://learn.microsoft.com/en-us/windows/wsl/setup/environment#set-up-your-linux-username-and-password
