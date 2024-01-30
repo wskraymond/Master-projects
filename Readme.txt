@@ -37,3 +37,24 @@ ________________________________________________________________________________
 WSL Installation and Setup
 https://learn.microsoft.com/en-us/windows/wsl/install#prerequisites
 https://learn.microsoft.com/en-us/windows/wsl/setup/environment#set-up-your-linux-username-and-password
+https://superuser.com/questions/1566022/how-to-set-default-user-for-manually-installed-wsl-distro
+https://code.visualstudio.com/docs/remote/troubleshooting#_fixing-problems-with-the-code-command-not-working
+
+
+Why WSL?
+WSL lets you run a Linux environment -- including command-line tools and applications -- directly on Windows, 
+without the overhead of a traditional virtual machine or dualboot setup. 
+WSL especially helps web developers and those working with Bash and Linux-first tools 
+(i.e. Ruby, Python) to use their toolchain on Windows and ensure consistency between development and production environments.
+
+Why the WSL extension in VS Code?
+With VS Code and the WSL extension combined, VS Code’s UI runs on Windows, 
+and all your commands, extensions, and even the terminal, run on Linux. 
+You get the full VS Code experience, including autocomplete and debugging, 
+powered by the tools and compilers installed on Linux.
+
+Getting started
+You can launch a new instance of VS Code connected to WSL by opening a WSL terminal, navigating to the folder of your choice, and typing code .:
+
+To get started with your first app using the WSL extension, check out the step-by-step WSL tutorial in docs:
+https://code.visualstudio.com/docs/remote/wsl-tutorial
