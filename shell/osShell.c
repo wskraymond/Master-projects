@@ -1,4 +1,3 @@
-//Wong Sheung Kam, 1155018945
 #include<stdio.h>
 #include<string.h>
 #include<unistd.h>
