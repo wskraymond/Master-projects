@@ -1,5 +1,7 @@
 
-ParallelBF(java) 
+Let's re-invent the wheel
+
+1. ParallelBF(java) 
 *A program used to find a shortest path with a network with billions of nodes (Big Data problem)
 
 *Using distributed platform (Hadoop) , by its map-reduce programming & parallel breath-first search algo
@@ -13,9 +15,7 @@ Related to the following tech:
 2. Map-reduce programming in hadoop , deal with big data problem
 3. Parallel Breadth first search in Map-reduce
 __________________________________________________________________________________________
-
-
-cloud storage with de-duplication (java) 
+2. cloud storage with de-duplication (java) 
 *A dropbox-like cloud storage program with de-duplication algo
 *using window azure cloud storage service
 
@@ -23,8 +23,7 @@ Related to the following tech
 1.De-duplication algorithm to minimize the actual total amount of files saved into storage
 2 cloud storage
 __________________________________________________________________________________________
-
-Proxy Server (C language)
+3. Proxy Server (C language)
 *HTTP Proxy Server simplified implemetation
 
 Related to the following tech
@@ -32,8 +31,11 @@ Related to the following tech
 2.multi-threading , Synchronization
 3.Implementation of Http protocol manipulation for proxy server
 
+
+
+Development Env
 __________________________________________________________________________________________
-Dev Env Setup
+Overview
 https://code.visualstudio.com/docs/remote/remote-overview
 https://code.visualstudio.com/docs/editor/command-line
 
@@ -71,4 +73,36 @@ You can launch a new instance of VS Code connected to WSL by opening a WSL termi
 
 To get started with your first app using the WSL extension, check out the step-by-step WSL tutorial in docs:
 https://code.visualstudio.com/docs/remote/wsl-tutorial
+https://phoenixnap.com/kb/how-to-create-sudo-user-on-ubuntu
 
+
+wsl --update
+
+wsl -shutdown
+
+wsl -d ubuntu -u <usrname>
+
+__________________________________________________________________________________________
+VS Project Setup
+https://code.visualstudio.com/docs/cpp/config-wsl
+
+If you click on the Remote Status bar item, you will see a dropdown of Remote commands appropriate for the session. 
+For example, if you want to end your session running in WSL,
+ you can select the Close Remote Connection command from the dropdown. 
+ 
+ Running code . from your WSL command prompt will restart VS Code running in WSL.
+
+The code . command opened VS Code in the current working folder,
+ which becomes your "workspace". As you go through the tutorial,
+  you will see three files created in a .vscode folder in the workspace:
+
+    c_cpp_properties.json (compiler path and IntelliSense settings)
+    tasks.json (build instructions)
+    launch.json (debugger settings)
+
+
+__________________________________________________________________________________________
+Build cmd for C program
+https://marketplace.visualstudio.com/items?itemName=ms-vscode.makefile-tools
+
+make -f Makefile 
