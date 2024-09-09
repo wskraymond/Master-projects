@@ -69,7 +69,11 @@ https://code.visualstudio.com/docs/editor/command-line
 2) You get the full VS Code experience, including autocomplete and debugging, powered by the tools and compilers installed on Linux.
 
 > Getting started
-- You can launch a new instance of VS Code connected to WSL by opening a WSL terminal, navigating to the folder of your choice, and typing code .:
+- You can launch a new instance of VS Code connected to WSL by opening a WSL terminal, navigating to the folder of your choice, and typing
+
+```bash
+  code .
+```
 
 > To get started with your first app using the WSL extension, check out the step-by-step WSL tutorial in docs:
 - https://code.visualstudio.com/docs/remote/wsl-tutorial
